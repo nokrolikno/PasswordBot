@@ -32,8 +32,8 @@ func NewMemoryRepo() *CredentialsMemoryRepository {
 		`CREATE TABLE IF NOT EXISTS cred (
 			UserID   int,
 			Service  VARCHAR(50),
-			Login    VARCHAR(100),
-			Password VARCHAR(100)
+			Login    VARCHAR(50),
+			Password VARCHAR(50)
 		);`,
 	)
 	cmr := CredentialsMemoryRepository{
@@ -43,18 +43,38 @@ func NewMemoryRepo() *CredentialsMemoryRepository {
 	return &cmr
 }
 
-func (repo *CredentialsMemoryRepository) Set(userID int64, service, login, password string) error {
-	_, err := repo.db.Exec(
-		"INSERT INTO cred (`UserID`, `Service`, `Login`, `Password`) VALUES (?, ?, ?, ?);",
-		userID,
-		service,
+func (repo *CredentialsMemoryRepository) Set(userID int64, service, login, password string) (bool, error) {
+	var l, p string
+	err := repo.db.
+		QueryRow("SELECT Login, Password FROM cred WHERE UserID = ? AND Service = ?;", userID, service).
+		Scan(&l, &p)
+	if err != nil && err != sql.ErrNoRows {
+		return false, fmt.Errorf("db error: %w", err)
+	}
+	if err == sql.ErrNoRows {
+		_, err = repo.db.Exec(
+			"INSERT INTO cred (`UserID`, `Service`, `Login`, `Password`) VALUES (?, ?, ?, ?);",
+			userID,
+			service,
+			login,
+			password,
+		)
+		if err != nil {
+			return false, fmt.Errorf("db error: %w", err)
+		}
+		return true, nil
+	}
+	_, err = repo.db.Exec(
+		"UPDATE cred SET Login = ?, Password = ? WHERE UserID = ? AND Service = ?;",
 		login,
 		password,
+		userID,
+		service,
 	)
 	if err != nil {
-		return fmt.Errorf("db error: %w", err)
+		return false, fmt.Errorf("db error: %w", err)
 	}
-	return nil
+	return false, nil
 }
 
 func (repo *CredentialsMemoryRepository) Get(userID int64, service string) (string, string, bool, error) {
@@ -88,4 +108,22 @@ func (repo *CredentialsMemoryRepository) Del(userID int64, service string) (bool
 		return false, nil
 	}
 	return true, nil
+}
+
+func (repo *CredentialsMemoryRepository) GetByID(userID int64) ([]string, error) {
+	result := make([]string, 0)
+	rows, err := repo.db.Query("SELECT Service FROM cred WHERE UserID = ?;", userID)
+	if err != nil {
+		return result, fmt.Errorf("db error: %w", err)
+	}
+	defer rows.Close()
+	var service string
+	for rows.Next() {
+		err := rows.Scan(&service)
+		if err != nil {
+			return result, fmt.Errorf("db error: %w", err)
+		}
+		result = append(result, service)
+	}
+	return result, nil
 }

@@ -8,7 +8,8 @@ type Credentials struct {
 }
 
 type CredentialsRepo interface {
-	Set(userID int64, service, login, password string) error
+	Set(userID int64, service, login, password string) (bool, error)
 	Get(userID int64, service string) (string, string, bool, error)
 	Del(userID int64, service string) (bool, error)
+	GetByID(userID int64) ([]string, error)
 }

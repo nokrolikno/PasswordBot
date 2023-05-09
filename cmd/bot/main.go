@@ -82,6 +82,8 @@ func startPasswordBot(cfg Config, ctx context.Context) error {
 	handleCommands["/set"] = credentialsHandler.Set
 	handleCommands["/get"] = credentialsHandler.Get
 	handleCommands["/del"] = credentialsHandler.Del
+	handleCommands["/help"] = credentialsHandler.Help
+	handleCommands["/getServices"] = credentialsHandler.GetServices
 
 	for update := range updates {
 		logger.Info("upd: %#v\n", update)
