@@ -123,7 +123,7 @@ func startPasswordBot(cfg Config, ctx context.Context) error {
 }
 
 func main() {
-	f, err := os.Open("config.yaml")
+	f, err := os.Open("config.yml")
 	if err != nil {
 		panic(err)
 	}

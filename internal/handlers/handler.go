@@ -44,6 +44,7 @@ func (ch *CredentialsHandler) Set(userID int64, commandText string) (string, err
 	password := words[2]
 	err := ch.CredentialsRepo.Set(userID, service, login, password)
 	if err != nil {
+		ch.Logger.Info(err)
 		return "", fmt.Errorf("error in CredentialsRepo.Set: %w", errors.Join(ErrHandler, err))
 	}
 	return fmt.Sprintf(`Логин и пароль для сервиса "%s" установлены`, service), nil
@@ -56,6 +57,7 @@ func (ch *CredentialsHandler) Get(userID int64, commandText string) (string, err
 	service := commandText
 	login, password, ok, err := ch.CredentialsRepo.Get(userID, service)
 	if err != nil {
+		ch.Logger.Info(err)
 		return "", fmt.Errorf("error in CredentialsRepo.Get: %w", errors.Join(ErrHandler, err))
 	}
 	if !ok {
@@ -71,6 +73,7 @@ func (ch *CredentialsHandler) Del(userID int64, commandText string) (string, err
 	service := commandText
 	ok, err := ch.CredentialsRepo.Del(userID, service)
 	if err != nil {
+		ch.Logger.Info(err)
 		return "", fmt.Errorf("error in CredentialsRepo.Del: %w", errors.Join(ErrHandler, err))
 	}
 	if ok {
