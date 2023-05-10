@@ -85,6 +85,12 @@ func startPasswordBot(cfg Config, ctx context.Context) error {
 	handleCommands["/help"] = credentialsHandler.Help
 	handleCommands["/getServices"] = credentialsHandler.GetServices
 
+	var helpKeyboard = tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Помощь"),
+		),
+	)
+
 	for update := range updates {
 		logger.Info("upd: %#v\n", update)
 		if update.Message == nil {
@@ -96,27 +102,33 @@ func startPasswordBot(cfg Config, ctx context.Context) error {
 		}
 		function, ok := handleCommands[command[0]]
 		if !ok {
-			bot.Send(tgbotapi.NewMessage(
+			msg := tgbotapi.NewMessage(
 				update.Message.Chat.ID,
 				"Неизвестная команда",
-			))
+			)
+			msg.ReplyMarkup = helpKeyboard
+			bot.Send(msg)
 			continue
 		}
 		response, err := function(update.Message.From.ID, command[1])
 		if errors.Is(err, handlers.ErrHandler) {
-			bot.Send(tgbotapi.NewMessage(
+			msg := tgbotapi.NewMessage(
 				update.Message.Chat.ID,
 				"Что-то пошло не так, повторите попытку позже",
-			))
+			)
+			msg.ReplyMarkup = helpKeyboard
+			bot.Send(msg)
 			continue
 		}
 		if command[0] == "/set" && err == nil {
 			go deleteMessage(bot, update.Message.Chat.ID, update.Message.MessageID)
 		}
-		message, _ := bot.Send(tgbotapi.NewMessage(
+		msg := tgbotapi.NewMessage(
 			update.Message.Chat.ID,
 			response,
-		))
+		)
+		msg.ReplyMarkup = helpKeyboard
+		message, _ := bot.Send(msg)
 		if command[0] == "/get" && err == nil {
 			go deleteMessage(bot, update.Message.Chat.ID, message.MessageID)
 		}
