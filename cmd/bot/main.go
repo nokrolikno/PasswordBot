@@ -84,6 +84,7 @@ func startPasswordBot(cfg Config, ctx context.Context) error {
 	handleCommands["/del"] = credentialsHandler.Del
 	handleCommands["/help"] = credentialsHandler.Help
 	handleCommands["/getServices"] = credentialsHandler.GetServices
+	handleCommands["Помощь"] = credentialsHandler.Help
 
 	var helpKeyboard = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
